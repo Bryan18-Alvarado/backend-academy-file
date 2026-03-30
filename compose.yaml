@@ -1,5 +1,5 @@
 services:
-  academy:
+  files:
     image: postgres:16
     environment:
       POSTGRES_PASSWORD: 12345678
@@ -16,4 +16,4 @@ services:
     ports:
       - "5051:80"
     depends_on:
-      - academy
+      - files
