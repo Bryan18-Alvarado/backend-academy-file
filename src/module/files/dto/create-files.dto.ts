@@ -8,6 +8,12 @@ export class CreateFileDto {
   @IsNumber()
   model_id: number;
 
+  @IsString()
+  mime: string;
+
+  @IsString()
+  file_name: string;
+
   @IsDate()
   @IsOptional()
   created_at: string;
@@ -15,10 +21,4 @@ export class CreateFileDto {
   @IsDate()
   @IsOptional()
   updated_at: string;
-
-  @IsString()
-  mime: string;
-
-  @IsString()
-  file_name: string;
 }

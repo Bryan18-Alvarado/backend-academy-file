@@ -1,32 +1,50 @@
-import { Controller } from '@nestjs/common';
+import { Controller, ParseIntPipe } from '@nestjs/common';
+import { MessagePattern, Payload } from '@nestjs/microservices';
+import { CreateFileDto } from '../dto/create-files.dto';
 import { FilesService } from '../service/files.service';
 
 @Controller('files')
 export class FilesController {
   constructor(private readonly filesService: FilesService) {}
 
-  // @Post()
-  // create(@Body() createFileDto: CreateFileDto) {
-  //   return this.filesService.create(createFileDto);
-  // }
+  @MessagePattern({ cmd: 'get_all_files' })
+  async getAll() {
+    const rows = await this.filesService.getAll();
 
-  // @Get()
-  // findAll() {
-  //   return this.filesService.findAll();
-  // }
+    const datos = {
+      data: rows,
+      count: rows.length,
+    };
 
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.filesService.findOne(+id);
-  // }
+    return datos;
+  }
 
-  // // @Patch(':id')
-  // // update(@Param('id') id: string, @Body() updateFileDto: UpdateFileDto) {
-  // //   return this.filesService.update(+id, updateFileDto);
-  // // }
+  @MessagePattern({ cmd: 'get_one_files' })
+  getOne(@Payload() id: number) {
+    return this.filesService.getOne(id);
+  }
 
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.filesService.remove(+id);
-  // }
+  @MessagePattern({ cmd: 'create_files' })
+  async create(@Payload() createFileDto: CreateFileDto) {
+    const file = await this.filesService.create(createFileDto);
+
+    const datos = {
+      data: file,
+      message: 'Archivo creado exitosamente',
+    };
+
+    return datos;
+  }
+
+  @MessagePattern({ cmd: 'update_files' })
+  async update(@Payload() payload: { id: number; fileDto: CreateFileDto }) {
+    const { id, fileDto } = payload;
+
+    return this.filesService.update(id, fileDto);
+  }
+
+  @MessagePattern({ cmd: 'delete_files' })
+  remove(@Payload(ParseIntPipe) id: number, payload: CreateFileDto) {
+    return this.filesService.delete(id, payload);
+  }
 }
