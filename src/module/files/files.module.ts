@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
-import { FilesService } from './service/files.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { FilesController } from './controller/files.controller';
+import { Files } from './entities/files.entity';
+import { FilesService } from './service/files.service';
 
 @Module({
-  imports: [],
+  imports: [TypeOrmModule.forFeature([Files])],
   controllers: [FilesController],
   providers: [FilesService],
 })

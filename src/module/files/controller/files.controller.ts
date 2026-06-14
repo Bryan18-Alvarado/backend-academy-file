@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  // Post,
-  // Body,
-  // Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { FilesService } from '../service/files.service';
 
 @Controller('files')
@@ -18,23 +10,23 @@ export class FilesController {
   //   return this.filesService.create(createFileDto);
   // }
 
-  @Get()
-  findAll() {
-    return this.filesService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.filesService.findOne(+id);
-  }
-
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateFileDto: UpdateFileDto) {
-  //   return this.filesService.update(+id, updateFileDto);
+  // @Get()
+  // findAll() {
+  //   return this.filesService.findAll();
   // }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.filesService.remove(+id);
-  }
+  // @Get(':id')
+  // findOne(@Param('id') id: string) {
+  //   return this.filesService.findOne(+id);
+  // }
+
+  // // @Patch(':id')
+  // // update(@Param('id') id: string, @Body() updateFileDto: UpdateFileDto) {
+  // //   return this.filesService.update(+id, updateFileDto);
+  // // }
+
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.filesService.remove(+id);
+  // }
 }

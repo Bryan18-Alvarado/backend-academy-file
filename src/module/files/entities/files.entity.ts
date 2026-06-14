@@ -1,18 +1,12 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ schema: 'files', name: 'file' })
-export class FilesEntity {
+export class Files {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
   @Column({ type: 'int4', nullable: false })
   model_id: number;
-
-  @Column({ type: 'int4', nullable: false })
-  user_id: number;
-
-  @Column({ type: 'int4', nullable: false })
-  user_updated_id: number;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
