@@ -1,10 +1,6 @@
-import { IsDate, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateFileDto {
-  @IsNumber()
-  @IsOptional()
-  id?: number;
-
   @IsNumber()
   model_id: number;
 
@@ -12,13 +8,13 @@ export class CreateFileDto {
   mime: string;
 
   @IsString()
-  file_name: string;
-
-  @IsDate()
   @IsOptional()
-  created_at: string;
+  file_name?: string;
 
-  @IsDate()
+  @IsString()
+  buffer: string;
+
   @IsOptional()
-  updated_at: string;
+  @IsString()
+  originalName?: string;
 }

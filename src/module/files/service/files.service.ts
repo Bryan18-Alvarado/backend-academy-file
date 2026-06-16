@@ -1,64 +1,109 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { promises as fs, readFileSync } from 'fs';
+import { extname, join } from 'path';
+import { Repository } from 'typeorm';
 import { CreateFileDto } from '../dto/create-files.dto';
-import { UpdateFileDto } from '../dto/update-files.dto';
 import { Files } from '../entities/files.entity';
+
 @Injectable()
 export class FilesService {
   constructor(
     @InjectRepository(Files)
-    private readonly filesRepo: Repository<Files>,
-    private readonly dataSource: DataSource,
+    private readonly fileRepository: Repository<Files>,
   ) {}
 
-  async getAll() {
-    const rows = this.dataSource
-      .getRepository(Files)
-      .createQueryBuilder('files')
-      .where('files.id is not null');
-
-    return await rows.getMany();
+  private getUploadsDir() {
+    return join(process.cwd(), 'uploads');
   }
 
-  async getOne(id: number) {
-    const row = await this.filesRepo.findOne({
-      where: { id: id },
+  private async ensureDir() {
+    await fs.mkdir(this.getUploadsDir(), { recursive: true });
+  }
+
+  async create(dto: CreateFileDto) {
+    await this.ensureDir();
+
+    const fileName = `${Date.now()}${extname(dto.originalName ?? '')}`;
+    const filePath = join(this.getUploadsDir(), fileName);
+
+    const buffer = Buffer.from(dto.buffer, 'base64');
+
+    await fs.writeFile(filePath, buffer);
+
+    const file = this.fileRepository.create({
+      model_id: dto.model_id,
+      mime: dto.mime,
+      file_name: fileName,
     });
 
-    if (!row) {
-      throw new NotFoundException(`File with id ${id} not found`);
-    }
-    return row;
+    return this.fileRepository.save(file);
   }
 
-  async create(fileDto: CreateFileDto) {
+  async updateFile(dto: CreateFileDto) {
+    const existing = await this.fileRepository.findOne({
+      where: { model_id: dto.model_id },
+    });
+
+    if (!existing) {
+      return this.create(dto);
+    }
+
+    const fileName = `${Date.now()}${extname(dto.originalName ?? '')}`;
+    const filePath = join(this.getUploadsDir(), fileName);
+
+    const buffer = Buffer.from(dto.buffer, 'base64');
+
+    await fs.writeFile(filePath, buffer);
+
     try {
-      const file = this.filesRepo.create(fileDto);
-
-      return await this.filesRepo.save(file);
+      await fs.unlink(join(this.getUploadsDir(), existing.file_name));
     } catch (error) {
-      console.log(error);
+      console.warn('Failed to delete old file:', error);
     }
+
+    existing.file_name = fileName;
+    existing.mime = dto.mime;
+
+    return this.fileRepository.save(existing);
   }
 
-  async update(id: number, fileDto: UpdateFileDto) {
-    const row = await this.getOne(id);
-
-    const mergeData = this.filesRepo.merge(row, fileDto);
-
-    return await this.filesRepo.save(mergeData);
+  async findByModel(modelId: number) {
+    return this.fileRepository.findOneBy({ model_id: modelId });
   }
 
-  async delete(id: number, payload: CreateFileDto) {
-    const row = await this.getOne(id);
+  async findOne(id: number) {
+    return this.fileRepository.findOneBy({ id });
+  }
 
-    const mergeData = this.filesRepo.merge(row, payload);
+  async deleteByModel(modelId: number) {
+    const file = await this.fileRepository.findOne({
+      where: { model_id: modelId },
+    });
 
-    const updateData = await this.filesRepo.save(mergeData);
+    if (!file) return { message: 'No file found' };
 
-    await this.filesRepo.remove(updateData);
+    try {
+      await fs.unlink(join(this.getUploadsDir(), file.file_name));
+    } catch {
+      return { message: 'File record deleted but file not found on disk' };
+    }
 
-    return row;
+    await this.fileRepository.delete(file.id);
+
+    return { message: 'File deleted successfully' };
+  }
+
+  async getFileBuffer(filename: string) {
+    const file = await this.fileRepository.findOneBy({ file_name: filename });
+
+    if (!file) throw new Error('File not found');
+
+    const buffer = readFileSync(join(this.getUploadsDir(), filename));
+
+    return {
+      file: buffer.toString('base64'),
+      mime: file.mime,
+    };
   }
 }
