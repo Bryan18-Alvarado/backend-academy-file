@@ -8,10 +8,6 @@ export class CreateFileDto {
   mime: string;
 
   @IsString()
-  @IsOptional()
-  file_name?: string;
-
-  @IsString()
   buffer: string;
 
   @IsOptional()
